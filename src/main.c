@@ -22,31 +22,42 @@ int main(int argc, char **argv){
 	signal(SIGINT, cleanup); // got ctrl+c
 	
 	// 1. read config file
-	FirewallConfig config = load_config(firewall.conf);
+	printf("[DEBUG] loading firewall configuration\n");
+	FirewallConfig config = load_config("firewall.conf");
 
 	
 	// initial Bloom filter 
+	printf("[DEBUG] Initial blacklist\n");
 	init_blacklist(config.blacklist_file);
 	
 	// set Netfilter queus
+	printf("[DEBUG] Open netfilter queue\n");
 	h = nfq_open(); // init connecteion with Netfilter
 	if(!h){
-		perror("nfq_open");
+		perror("nfq_open fail");
 		exit(1);
 	}
 
 	nfq_unbind_pf(h, AF_INET);
 	nfq_bind_pf(h, AF_INET);
 	
+	printf("[DEBUG] creating netfilter queue\n");
 	qh = nfq_create_queue(h, config.queue_num, &process_packet, NULL);
-	nft_set_mode(qh, NFQNL_COPY_PACKET, 0xffff); // copy everything 
+	if(!qh){
+		perror("[ERROR] nfq_create_queue failed\n");
+		exit(1);
+	} else{
+		printf("[DEBUG] Queue created successfully\n");
+	}
+
+	nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xffff); // copy everything 
 	
 	int fd = nfq_fd(h); // listen for incoming data
 	char buf[4096] __attribute__((aligned));
 	int rv;
 	
 	printf("[*] Firewall is running on queue %d...\n", config.queue_num);
-	while((rv == recv(fd, buf, sizeof(buf), 0)) >= 0){ // when receive packet, 
+	while ((rv = recv(fd, buf, sizeof(buf), 0)) >= 0) { // when receive packet, 
 		nfq_handle_packet(h, buf, rv);
 	}
 	

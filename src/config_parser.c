@@ -4,7 +4,7 @@
 #include "config_parser.h"
 // actual implementation to read config
 
-FirewallConfig load_config(const char *filname){
+FirewallConfig load_config(const char *filename){
 	FirewallConfig config;
 	FILE *fp = fopen(filename, "r");
 	if(!fp){
@@ -25,9 +25,9 @@ FirewallConfig load_config(const char *filname){
 		if (strcmp(key, "blacklist_file") == 0) {
 			strncpy(config.blacklist_file, value, sizeof(config.blacklist_file));
 			
-		} else if (strcmp(key, "queue_num") == 0)){
+		} else if (strcmp(key, "queue_num") == 0){
 			config.queue_num = atoi(value);
-		} else if (strcmp(key, "log_mode") == 0)){
+		} else if (strcmp(key, "log_mode") == 0){
 			if(strcmp(value, "verbose") == 0){
 				config.log_mode = 1;
 			} else {

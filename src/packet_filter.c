@@ -2,15 +2,21 @@
 #include "packet_filter.h"
 #include "blacklist.h"
 #include <netinet/ip.h>
-#include <libnetfilter_queue/libnetfilter_queue_h>
+#include <libnetfilter_queue/libnetfilter_queue.h>
 #include <arpa/inet.h> 
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <linux/netfilter.h>
+
+
 
 // read from net tool to get packet, 
 int process_packet(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
                    struct nfq_data *nfa, void *data){
 					   
 	struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(nfa);
-    u32 id = ntohl(ph->packet_id);
+    uint32_t id = ntohl(ph->packet_id);
     unsigned char *packetData;
     int len = nfq_get_payload(nfa, &packetData);
 

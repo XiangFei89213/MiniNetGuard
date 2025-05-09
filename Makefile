@@ -1,6 +1,6 @@
-cc = gcc
-CFLAGS = -Wall -Iinclude
-LIBS = -Inetfilter_queue Ibloom
+CC = gcc
+CFLAGS = -Wall -Iinclude -I/usr/local/include
+LIBS = -lnetfilter_queue -lbloom
 
 SRC = src/main.c src/config_parser.c src/blacklist.c src/packet_filter.c src/bloom_wrapper.c
 OBJ = main.o config_parser.o blacklist.o packet_filter.o bloom_wrapper.o
@@ -11,4 +11,4 @@ firewall: $(SRC)
 	$(CC) $(CFLAGS) -o firewall $(SRC) $(LIBS)
 
 clean:
-	rm -f firewall *-o
+	rm -f firewall *.o
