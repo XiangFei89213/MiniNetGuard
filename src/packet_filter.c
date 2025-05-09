@@ -1,3 +1,4 @@
+// Processes each packet and checks if it should be dropped or accepted.
 #include "packet_filter.h"
 #include "blacklist.h"
 #include <netinet/ip.h>

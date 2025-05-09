@@ -19,7 +19,7 @@ FirewallConfig load_config(const char *filname){
 	
 	char line[256];
 	while(fgets(line, sizeof(line), fp)){
-		char *key = strtok(line, "="); //what is this finction
+		char *key = strtok(line, "="); // string token, 
 		char *value = strtok(NULL, "\n");
 		
 		if (strcmp(key, "blacklist_file") == 0) {
