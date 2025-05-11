@@ -18,6 +18,7 @@ void cleanup() {
 	exit(0);
 }
 
+
 int main(int argc, char **argv){
 	signal(SIGINT, cleanup); // got ctrl+c
 	
@@ -57,9 +58,16 @@ int main(int argc, char **argv){
 	int rv;
 	
 	printf("[*] Firewall is running on queue %d...\n", config.queue_num);
-	while ((rv = recv(fd, buf, sizeof(buf), 0)) >= 0) { // when receive packet, 
+	printf("[DEBUG] Waiting for packets...\n");
+	while ((rv = recv(fd, buf, sizeof(buf), 0)) >= 0) {
+		if (rv == 0) {
+			printf("[DEBUG] No packets received.\n");
+		} else {
+			printf("[DEBUG] Received packet of size %d\n", rv);
+		}
 		nfq_handle_packet(h, buf, rv);
 	}
+
 	
 	
 	cleanup();
