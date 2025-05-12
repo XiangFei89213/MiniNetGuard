@@ -49,12 +49,18 @@ void extract_ports(char *packet_data) {
     }
 }
 
+void log_packet(const char *action, const char *src_ip, const char *protocol, uint16_t src_port, uint16_t dst_port) {
+    FILE *log_file = fopen("/tmp/firewall_log.txt", "a");
+    if (log_file) {
+        fprintf(log_file, "[%s] %s | Protocol: %s | Src Port: %d | Dst Port: %d\n", 
+                action, src_ip, protocol, src_port, dst_port);
+        fclose(log_file);
+    }
+}
 
-// read from net tool to get packet, 
 int process_packet(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
-                   struct nfq_data *nfa, void *data){
-					   
-	struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(nfa);
+                   struct nfq_data *nfa, void *data) {
+    struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(nfa);
     uint32_t id = ntohl(ph->packet_id);
     unsigned char *packetData;
     int len = nfq_get_payload(nfa, &packetData);
@@ -67,18 +73,76 @@ int process_packet(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
         char src_ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &src_addr, src_ip, sizeof(src_ip));
 
-        inspect_packet((char *) packetData);
+        // Identify the protocol
+        const char *protocol;
+        uint16_t src_port = 0, dst_port = 0;
 
-        // call 
-        extract_ports((char *)packetData);
+        switch (ip->protocol) {
+            case IPPROTO_TCP: {
+                protocol = "TCP";
+                struct tcphdr *tcp_header = (struct tcphdr *)((char *)ip + (ip->ihl << 2));
+                src_port = ntohs(tcp_header->th_sport);
+                dst_port = ntohs(tcp_header->th_dport);
+                break;
+            }
+            case IPPROTO_UDP: {
+                protocol = "UDP";
+                struct udphdr *udp_header = (struct udphdr *)((char *)ip + (ip->ihl << 2));
+                src_port = ntohs(udp_header->uh_sport);
+                dst_port = ntohs(udp_header->uh_dport);
+                break;
+            }
+            case IPPROTO_ICMP:
+                protocol = "ICMP";
+                break;
+            default:
+                protocol = "UNKNOWN";
+        }
 
+        // Log and decide the packet action
         if (is_blacklisted(src_ip)) {
             printf("[DROP] %s\n", src_ip);
+            log_packet("DROP", src_ip, protocol, src_port, dst_port);
             return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
         } else {
             printf("[ACCEPT] %s\n", src_ip);
+            log_packet("ACCEPT", src_ip, protocol, src_port, dst_port);
         }
     }
 
     return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
+
+
+// // read from net tool to get packet, 
+// int process_packet(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
+//                    struct nfq_data *nfa, void *data){
+					   
+// 	struct nfqnl_msg_packet_hdr *ph = nfq_get_msg_packet_hdr(nfa);
+//     uint32_t id = ntohl(ph->packet_id);
+//     unsigned char *packetData;
+//     int len = nfq_get_payload(nfa, &packetData);
+
+//     if (len >= sizeof(struct iphdr)) {
+//         struct iphdr *ip = (struct iphdr *)packetData;
+//         struct in_addr src_addr;
+//         src_addr.s_addr = ip->saddr;
+
+//         char src_ip[INET_ADDRSTRLEN];
+//         inet_ntop(AF_INET, &src_addr, src_ip, sizeof(src_ip));
+
+//         inspect_packet((char *) packetData);
+
+//         // call 
+//         extract_ports((char *)packetData);
+
+//         if (is_blacklisted(src_ip)) {
+//             printf("[DROP] %s\n", src_ip);
+//             return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+//         } else {
+//             printf("[ACCEPT] %s\n", src_ip);
+//         }
+//     }
+
+//     return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+// }
