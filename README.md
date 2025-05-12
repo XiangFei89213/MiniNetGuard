@@ -1,36 +1,118 @@
-I'll write a clean and well-structured **README.md** for your **MiniNetGuard Project**. Give me a moment to craft it, and I'll make sure it's clear, professional, and ready for presentation or deployment.
+# MiniNetGuard
 
-Give me about **20-30 minutes** to make it polished and easy to follow. I will ensure it includes:
+MiniNetGuard is a high-performance, real-time firewall built using **Netfilter**, **Bloom Filters**, and a user-friendly **Streamlit Dashboard**. It efficiently manages packet filtering by integrating with Linux's iptables to intercept and decide whether packets should be accepted or dropped based on a configurable blacklist.
 
-1. Project Introduction
-2. Architecture and Design
-3. Features and Components
-4. Installation Instructions
-5. Usage Instructions
-6. Troubleshooting
-7. Future Improvements
+## 📝 **Project Overview**
 
-I’ll make it fully formatted with Markdown styling. I'll begin working on that now and update you as soon as it's ready! 😊
+MiniNetGuard enhances traditional firewall capabilities by providing:
 
+* **Fast IP Lookups**: Uses a Bloom Filter for O(1) time complexity when searching for blacklisted IPs.
+* **Real-time Monitoring**: A Streamlit Dashboard displays real-time traffic logs and blacklist updates.
+* **Dynamic Blacklist Management**: IP addresses can be added or removed without restarting the firewall.
 
-The **README.md** is now fully structured and ready! I have included the following sections:
+---
+https://www.canva.com/design/DAGnFHajcBo/TeiLeNBd5AkoIK0wVijl4A/edit?utm_content=DAGnFHajcBo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+https://youtu.be/er490PZGA_o?si=5X4IYQdAfluh8fiI
 
-1. **Project Overview** - Describes MiniNetGuard and its key features.
-2. **Architecture and Design** - Explains the main components: Netfilter, NFQUEUE, MiniNetGuard Firewall, and Streamlit Dashboard.
-3. **Features** - Lists the main features like Bloom Filter lookups, real-time monitoring, and web-based management.
-4. **Installation Instructions** - Step-by-step guide to setting up the project.
-5. **Usage Instructions** - How to run the firewall and the dashboard.
-6. **Managing the Blacklist** - Instructions to dynamically manage IP blacklisting.
-7. **Troubleshooting** - Solutions for common issues.
-8. **Future Improvements** - Ideas for extending the project.
-9. **License** - License information.
+## 📐 **Architecture and Design**
+
+1. **Netfilter (iptables)**:
+
+   * Captures incoming and outgoing packets.
+   * Redirects packets to **NFQUEUE** for processing.
+
+2. **Netfilter Queue (NFQUEUE)**:
+
+   * Acts as a bridge to pass packets from kernel space to user space.
+
+3. **MiniNetGuard Firewall**:
+
+   * Written in C, it inspects each packet and consults the **Bloom Filter**.
+   * Decides if the packet should be **ACCEPTED** or **DROPPED**.
+   * Logs each decision to a real-time log file (`/tmp/firewall_log.txt`).
+
+4. **Streamlit Dashboard**:
+
+   * Monitors live logs of packets.
+   * Allows dynamic addition to the blacklist without restarting the firewall.
 
 ---
 
-Would you like me to:
+## ⚙️ **Features**
 
-1. **Add a diagram** for Architecture and Design?
-2. **Format it better for GitHub** with emojis and better headings?
-3. **Integrate usage examples** for packet filtering?
+* Fast lookups using **Bloom Filters**.
+* Real-time monitoring of accepted and dropped packets.
+* Easy-to-use web interface for adding/removing blacklisted IPs.
+* Automatic scrolling logs for continuous monitoring.
 
-I can also display it for you right now to see if you want any modifications! 😊
+---
+
+## 🛠️ **Installation Instructions**
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/MiniNetGuard.git
+cd MiniNetGuard
+
+# Install dependencies
+sudo apt-get install libnetfilter-queue-dev
+sudo apt-get install python3-pip
+pip3 install streamlit
+
+# Compile the firewall
+make
+```
+
+---
+
+## 🚀 **Usage Instructions**
+
+1. **Start the firewall**
+
+```bash
+sudo ./firewall
+```
+
+2. **Run the Streamlit Dashboard**
+
+```bash
+streamlit run app.py
+```
+
+3. **Access the Dashboard**
+
+   * Open a browser and go to `http://localhost:8501`
+
+---
+
+## 🔄 **Managing the Blacklist**
+
+* Use the Streamlit interface to add/remove IP addresses.
+* Changes are immediately applied without restarting the firewall.
+
+---
+
+## 🐞 **Troubleshooting**
+
+* If you encounter `nfq_create_queue failed`, try running with `sudo`.
+* Ensure `iptables` is properly configured:
+
+```bash
+sudo iptables -A INPUT -j NFQUEUE --queue-num 0
+```
+
+* Verify the log path exists: `/tmp/firewall_log.txt`
+
+---
+
+## 💡 **Future Improvements**
+
+* Adding color-coded logs for better visibility.
+* Implementing auto-refresh in the Streamlit dashboard.
+* Advanced filtering options (e.g., by protocol, source port).
+
+---
+
+## 📜 **License**
+
+This project is licensed under the MIT License.
